@@ -63,7 +63,7 @@ async def yandex_devices(request: Request):
                     "id": "esp32_curtain_01",
                     "name": "Штора",
                     "description": "Шаговый мотор на ESP32 через MQTT",
-                    "type": "devices.types.blind",
+                    "type": "devices.types.curtain",
                     "capabilities": [
                         {
                             "type": "devices.capabilities.on_off",
