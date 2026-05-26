@@ -61,17 +61,14 @@ async def yandex_devices(request: Request):
             "devices": [
                 {
                     "id": "esp32_curtain_01",
-                    "name": "Штора",
+                    "name": "Штора",  # Для вас и Алисы это останется Шторой
                     "description": "Шаговый мотор на ESP32 через MQTT",
-                    "type": "devices.types.curtain",
+                    "type": "devices.types.switch",  # МАСКИРОВКА: Притворяемся выключателем
                     "capabilities": [
                         {
-                            "type": "devices.capabilities.on_off",
+                            "type": "devices.capabilities.on_off",  # Родное умение для выключателя
                             "retrievable": True,
-                            "reportable": False,
-                            "parameters": {
-                                "split": False  # Указываем, что это простой одноклавишный выключатель
-                            }
+                            "reportable": False
                         }
                     ],
                     "device_info": {
