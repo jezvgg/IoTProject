@@ -1,5 +1,6 @@
 import json
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import RedirectResponse
 import paho.mqtt.client as mqtt
 
 app = FastAPI()
@@ -7,8 +8,8 @@ app = FastAPI()
 # --- НАСТРОЙКИ MQTT ---
 MQTT_BROKER = "127.0.0.1"
 MQTT_PORT = 1883
-MQTT_USER = "ваш_логин"
-MQTT_PASS = "ваш_пароль"
+MQTT_USER = "jezv"
+MQTT_PASS = "1122334455"
 MQTT_TOPIC = "shpora_curtain/cover/curtain/command"
 
 # Инициализация MQTT
@@ -18,17 +19,36 @@ mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
 
-# --- HTTP ЭНДПОИНТЫ ДЛЯ ЯНДЕКСА ---
+# --- ФЕЙКОВАЯ АВТОРИЗАЦИЯ (OAuth 2.0) ДЛЯ ЯНДЕКСА ---
 
-# 1. Проверка связи (HEAD/GET запрос)
+# 1. Сюда Яндекс перенаправит вас в приложении на телефоне
+@app.get("/auth")
+async def yandex_oauth_auth(redirect_uri: str, state: str):
+    # Скрипт ловит адрес возврата Яндекса и мгновенно отправляет его назад с фейковым кодом
+    return RedirectResponse(f"{redirect_uri}?code=fake_auth_code_2026&state={state}")
+
+
+# 2. Сюда сервер Яндекса постучится за токеном
+@app.post("/token")
+async def yandex_oauth_token(request: Request):
+    # Игнорируем проверку секретов и просто отдаем Яндексу "вечный" токен (на 1 год)
+    return {
+        "access_token": "super_secret_master_token_2026",
+        "token_type": "Bearer",
+        "expires_in": 31536000
+    }
+
+
+# --- HTTP ЭНДПОИНТЫ УМНОГО ДОМА ---
+
+# 3. Проверка связи
 @app.head("/v1.0")
 @app.get("/v1.0")
 async def yandex_head():
-    # Яндекс требует просто 200 OK в ответ на этот запрос
     return Response(status_code=200)
 
 
-# 2. Список устройств (Discovery)
+# 4. Список устройств (Discovery)
 @app.get("/v1.0/user/devices")
 async def yandex_devices():
     payload = {
@@ -40,10 +60,10 @@ async def yandex_devices():
                     "id": "esp32_curtain_01",
                     "name": "Штора",
                     "description": "Шаговый мотор на ESP32 через MQTT",
-                    "type": "devices.types.blind",  # Тип устройства: Шторы
+                    "type": "devices.types.blind",
                     "capabilities": [
                         {
-                            "type": "devices.capabilities.on_off",  # Стандартное умение Вкл/Выкл
+                            "type": "devices.capabilities.on_off",
                             "retrievable": True,
                             "reportable": False
                         }
@@ -60,24 +80,19 @@ async def yandex_devices():
     return payload
 
 
-# 3. Выполнение команды (Action)
+# 5. Выполнение команды (Action)
 @app.post("/v1.0/user/devices/action")
 async def yandex_action(request: Request):
     data = await request.json()
     
-    # Извлекаем данные из строгого JSON Яндекса
     device = data["payload"]["devices"][0]
     capability = device["capabilities"][0]
-    
-    # Получаем состояние: True (Включено/Открыто) или False (Выключено/Закрыто)
     is_on = capability["state"]["value"]
     
-    # Отправляем понятную для ESPHome команду в MQTT топик
     mqtt_command = "OPEN" if is_on else "CLOSE"
     mqtt_client.publish(MQTT_TOPIC, mqtt_command)
     print(f"[MQTT] Отправлена команда {mqtt_command} в топик {MQTT_TOPIC}")
     
-    # Строгий формат ответа Яндексу об успешном выполнении
     response_payload = {
         "request_id": data["request_id"],
         "payload": {

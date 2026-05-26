@@ -1,3 +1,4 @@
+
 esphome:
   name: shpora-mqtt
 
@@ -7,13 +8,13 @@ esp32:
     type: arduino
 
 wifi:
-  ssid: "ИМЯ_ВАШЕГО_WI-FI"
-  password: "ПАРОЛЬ_ОТ_WI-FI"
+  ssid: "GoshaHome"
+  password: "1122334455"
 
 mqtt:
-  broker: 192.168.1.50  # IP-адрес вашего мини-ПК
-  username: "ваш_логин"
-  password: "ваш_пароль"
+  broker: 192.168.88.252  # IP-адрес вашего мини-ПК
+  username: "jezv"
+  password: "1122334455"
   topic_prefix: shpora_curtain
 
 logger:
