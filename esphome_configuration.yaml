@@ -4,24 +4,20 @@ esphome:
 esp32:
   board: esp32dev
   framework:
-    type: arduino # Используем стабильный и быстрый Arduino-фреймворк
+    type: arduino
 
-# Настройки подключения к роутеру
 wifi:
-  ssid: "GoshaWifi"
-  password: "1122334455"
+  ssid: "ИМЯ_ВАШЕГО_WI-FI"
+  password: "ПАРОЛЬ_ОТ_WI-FI"
 
-# Настройки подключения к вашему мини-ПК (серверу)
 mqtt:
-  broker: 192.168.88.252
-  username: "jezv"
-  password: "1122334455"
-  topic_prefix: shpora_curtain # Этот префикс жестко привязан к нашему Python-скрипту
+  broker: 192.168.1.50  # IP-адрес вашего мини-ПК
+  username: "ваш_логин"
+  password: "ваш_пароль"
+  topic_prefix: shpora_curtain
 
-# Включаем логирование (через USB-провод мы увидим, что делает плата)
 logger:
 
-# Описываем подключение шагового моторчика к ULN2003
 stepper:
   - platform: uln2003
     id: my_stepper
@@ -29,24 +25,29 @@ stepper:
     pin_b: GPIO18
     pin_c: GPIO5
     pin_d: GPIO17
-    max_speed: 250 steps/s # Безопасная скорость вращения
-    sleep_when_done: true  # Обесточивает мотор после остановки, чтобы он не грелся
+    max_speed: 250 steps/s
+    sleep_when_done: true
 
-# Описываем сущность "Штора" для управления через MQTT
+# ИСПРАВЛЕНО: Используем template вместо feedback
 cover:
-  - platform: feedback
+  - platform: template
     name: "Штора"
     id: curtain
     device_class: curtain
     
-    # Что делать при команде OPEN (открыть) — крутим мотор вперед на 4000 шагов
+    # Оптимизируем под бинарное управление (Алиса присылает только Открыть/Закрыть)
     open_action:
       - stepper.set_target:
           id: my_stepper
           target: 4000
-          
-    # Что делать при команде CLOSE (закрыть) — возвращаем мотор в нулевую точку
     close_action:
       - stepper.set_target:
           id: my_stepper
           target: 0
+    stop_action:
+      - stepper.set_target:
+          id: my_stepper
+          target: !lambda "return id(my_stepper).current_position;"
+          
+    # Обязательная строка для template cover, чтобы ESPHome понимал статус шторы
+    optimistic: true
