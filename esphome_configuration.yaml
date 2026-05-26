@@ -1,19 +1,27 @@
 esphome:
-  name: matter-shpora
+  name: shpora-mqtt
 
 esp32:
   board: esp32dev
   framework:
-    type: esp-idf 
+    type: arduino # Используем стабильный и быстрый Arduino-фреймворк
 
+# Настройки подключения к роутеру
 wifi:
   ssid: "GoshaWifi"
   password: "1122334455"
 
+# Настройки подключения к вашему мини-ПК (серверу)
+mqtt:
+  broker: 192.168.88.252
+  username: "jezv"
+  password: "1122334455"
+  topic_prefix: shpora_curtain # Этот префикс жестко привязан к нашему Python-скрипту
+
+# Включаем логирование (через USB-провод мы увидим, что делает плата)
 logger:
 
-matter:
-
+# Описываем подключение шагового моторчика к ULN2003
 stepper:
   - platform: uln2003
     id: my_stepper
@@ -21,24 +29,24 @@ stepper:
     pin_b: GPIO18
     pin_c: GPIO5
     pin_d: GPIO17
-    max_speed: 250 steps/s
-    sleep_when_done: true 
+    max_speed: 250 steps/s # Безопасная скорость вращения
+    sleep_when_done: true  # Обесточивает мотор после остановки, чтобы он не грелся
 
+# Описываем сущность "Штора" для управления через MQTT
 cover:
   - platform: feedback
-    name: "Умная Штора"
-    id: matter_curtain
+    name: "Штора"
+    id: curtain
     device_class: curtain
-
+    
+    # Что делать при команде OPEN (открыть) — крутим мотор вперед на 4000 шагов
     open_action:
       - stepper.set_target:
           id: my_stepper
           target: 4000
+          
+    # Что делать при команде CLOSE (закрыть) — возвращаем мотор в нулевую точку
     close_action:
       - stepper.set_target:
           id: my_stepper
           target: 0
-    stop_action:
-      - stepper.report_position:
-          id: my_stepper
-          position: !lambda "return id(my_stepper).current_position;"
