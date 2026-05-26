@@ -1,0 +1,44 @@
+esphome:
+  name: matter-shpora
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf 
+
+wifi:
+  ssid: "GoshaWifi"
+  password: "1122334455"
+
+logger:
+
+matter:
+
+stepper:
+  - platform: uln2003
+    id: my_stepper
+    pin_a: GPIO19
+    pin_b: GPIO18
+    pin_c: GPIO5
+    pin_d: GPIO17
+    max_speed: 250 steps/s
+    sleep_when_done: true 
+
+cover:
+  - platform: feedback
+    name: "Умная Штора"
+    id: matter_curtain
+    device_class: curtain
+
+    open_action:
+      - stepper.set_target:
+          id: my_stepper
+          target: 4000
+    close_action:
+      - stepper.set_target:
+          id: my_stepper
+          target: 0
+    stop_action:
+      - stepper.report_position:
+          id: my_stepper
+          position: !lambda "return id(my_stepper).current_position;"
