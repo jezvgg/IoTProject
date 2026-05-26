@@ -68,7 +68,10 @@ async def yandex_devices(request: Request):
                         {
                             "type": "devices.capabilities.on_off",
                             "retrievable": True,
-                            "reportable": False
+                            "reportable": False,
+                            "parameters": {
+                                "split": False  # Указываем, что это простой одноклавишный выключатель
+                            }
                         }
                     ],
                     "device_info": {
@@ -81,7 +84,6 @@ async def yandex_devices(request: Request):
         }
     }
     return payload
-
 
 # 3. Запрос состояния (Query) — ИСПРАВЛЕНО (Раньше давал 404)
 @app.post("/v1.0/user/devices/query")
