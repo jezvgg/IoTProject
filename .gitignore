@@ -10,3 +10,7 @@ wheels/
 .venv
 
 .esphome
+.env
+uv.lock
+secrets.yaml
+mosquitto/config/passwd

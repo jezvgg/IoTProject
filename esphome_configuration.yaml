@@ -1,4 +1,3 @@
-
 esphome:
   name: shpora-mqtt
 
@@ -8,13 +7,13 @@ esp32:
     type: arduino
 
 wifi:
-  ssid: "GoshaHome"
-  password: "1122334455"
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
 
 mqtt:
-  broker: 192.168.88.252  # IP-адрес вашего мини-ПК
-  username: "jezv"
-  password: "1122334455"
+  broker: !secret mqtt_broker
+  username: !secret mqtt_username
+  password: !secret mqtt_password
   topic_prefix: shpora_curtain
 
 logger:
@@ -32,10 +31,10 @@ stepper:
 # ИСПРАВЛЕНО: Используем template вместо feedback
 cover:
   - platform: template
-    name: "Штора"
+    name: "curtain"
     id: curtain
     device_class: curtain
-    
+
     # Оптимизируем под бинарное управление (Алиса присылает только Открыть/Закрыть)
     open_action:
       - stepper.set_target:
@@ -49,6 +48,6 @@ cover:
       - stepper.set_target:
           id: my_stepper
           target: !lambda "return id(my_stepper).current_position;"
-          
+
     # Обязательная строка для template cover, чтобы ESPHome понимал статус шторы
     optimistic: true
