@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   curtain-gateway:
     build: .
@@ -22,15 +20,16 @@ services:
       - ./mosquitto/config:/mosquitto/config
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
-    entrypoint: >
-      sh -c "
-      if [ ! -f /mosquitto/config/passwd ]; then
-        echo 'Генерация файла паролей MQTT...'
-        mosquitto_passwd -b -c /mosquitto/config/passwd \$$MQTT_USER \$$MQTT_PASS
-        chown 1883:1883 /mosquitto/config/passwd
-      fi
-      exec /docker-entrypoint.sh mosquitto -c /mosquitto/config/mosquitto.conf
-      "
+    entrypoint:
+      - sh
+      - -c
+      - |
+        if [ ! -f /mosquitto/config/passwd ]; then
+          echo 'Генерация файла паролей MQTT...'
+          mosquitto_passwd -b -c /mosquitto/config/passwd "$$MQTT_USER" "$$MQTT_PASS"
+          chown 1883:1883 /mosquitto/config/passwd
+        fi
+        exec /docker-entrypoint.sh mosquitto -c /mosquitto/config/mosquitto.conf
 
 volumes:
   mosquitto-data:
